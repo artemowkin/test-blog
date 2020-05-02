@@ -1,10 +1,42 @@
 from django.views.generic import ListView, DetailView
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.http import HttpResponseRedirect, Http404
+from django.http import HttpResponseRedirect, Http404, JsonResponse
 from django.urls import reverse_lazy
 
 from .models import Post
+
+
+class JsonableResponseMixin:
+
+    def form_invalid(self, form):
+        response = super().form_invalid(form)
+        if not self.request.is_ajax():
+            return response
+        else:
+            return JsonResponse(form.errors, status=400)
+
+    def form_valid(self, form):
+        if 'text/html' in self.request.headers.get('Accept', '*/*'):
+            form.instance.author = self.request.user
+            return super().form_valid(form)
+        else:
+            response_data = {}
+            title = self.request.POST.get('title')
+            body = self.request.POST.get('body')
+            author = self.request.user
+
+            response_data['title'] = title
+            response_data['body'] = body
+            response_data['author'] = author.username
+
+            Post.objects.create(
+                title=title,
+                body=body,
+                author=author,
+            )
+
+            return JsonResponse(response_data)
 
 
 class PostListView(ListView):
@@ -18,17 +50,14 @@ class PostDetailView(DetailView):
     template_name = 'pages/post_detail.html'
 
 
-class PostCreateView(LoginRequiredMixin, CreateView):
+class PostCreateView(JsonableResponseMixin, CreateView):
     model = Post
     fields = ('title', 'body')
     template_name = 'pages/post_create.html'
-    raise_exception = True
 
-    def form_valid(self, form):
-        obj = form.save(commit=False)
-        obj.author = self.request.user
-        obj.save()
-        return HttpResponseRedirect(obj.get_absolute_url())
+    def dispatch(self, *args, **kwargs):
+        print('IM HERE')
+        return super().dispatch(*args, **kwargs)
 
 
 class PostUpdateView(UpdateView):
