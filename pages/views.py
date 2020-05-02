@@ -10,9 +10,8 @@ from .models import Post
 class JsonableResponseMixin:
 
     def form_invalid(self, form):
-        response = super().form_invalid(form)
-        if not self.request.is_ajax():
-            return response
+        if 'text/html' in self.request.headers.get('Accept', '*/*'):
+            return super().form_invalid(form)
         else:
             return JsonResponse(form.errors, status=400)
 
@@ -54,10 +53,6 @@ class PostCreateView(JsonableResponseMixin, CreateView):
     model = Post
     fields = ('title', 'body')
     template_name = 'pages/post_create.html'
-
-    def dispatch(self, *args, **kwargs):
-        print('IM HERE')
-        return super().dispatch(*args, **kwargs)
 
 
 class PostUpdateView(UpdateView):

@@ -20,6 +20,9 @@
             success:function(json){
                 console.log(json);
             },
+            error:function(xhr, errmsg, err) {
+                alert(xhr.status + ": " + xhr.responseText)
+            }
         });
     });
 </script>
@@ -29,7 +32,14 @@
 <h3 class="mb-4">Create Post</h3>
 <form method="post" id="post-form">
     {% csrf_token %}
-    {{ form|crispy }}
-    <button type="submit" id="post-button" class="btn btn-success">Submit</button>
+    <div class="form-group">
+        <label>Title</label>
+        <input class="form-control" type="text" name='title' placeholder="Title" id="id_title">
+    </div>
+    <div class="form-group">
+        <label>Body</label>
+        <textarea class="form-control" name='body' placeholder="Body" id="id_body"></textarea>
+    </div>
+    <button type="submit" id="post-button" class="btn btn-success">Post</button>
 </form>
 {% endblock %}
