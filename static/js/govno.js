@@ -4,7 +4,7 @@ function success(position) {
 
 
 function error(err) {
-    alert(err);
+    alert(err, err.code);
 }
 
 
